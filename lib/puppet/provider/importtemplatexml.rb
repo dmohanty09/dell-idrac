@@ -173,7 +173,7 @@ class Puppet::Provider::Importtemplatexml <  Puppet::Provider
           })
           bios_boot_sequence.push(partition.nic.fqdd)
         else
-          Puppet.warn("Found non-static iSCSI network while configuring boot from SAN: #{iscsi_network.id}")
+          Puppet.warn("Found non-static iSCSI network while configuring boot from SAN")
         end
     end
     changes['partial'].deep_merge!({'BIOS.Setup.1-1' => { 'BiosBootSeq' => bios_boot_sequence.join(',') } })
@@ -182,17 +182,19 @@ class Puppet::Provider::Importtemplatexml <  Puppet::Provider
   def munge_virt_mac_addr(nc, changes)
     partitions = nc.get_all_partitions
     partitions.each do |partition|
-      changes['partial'].deep_merge!({
-        partition.nic.fqdd => {
-          'VirtMacAddr' => partition['lanMacAddress']
-        }
-      })
+      if(!partition['lanMacAddress'].nil?)
+	      changes['partial'].deep_merge!({
+	        partition.nic.fqdd => {
+	          'VirtMacAddr' => partition['lanMacAddress']
+	        }
+	      })
+	  end
     end
   end
 
   def get_iscsi_network(network_objects)
     network_objects.detect do |network|
-      network['name'] == 'iSCSI'
+      network['type'] == 'STORAGE_ISCSI_SAN'
     end
   end
 
